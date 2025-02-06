@@ -6,7 +6,7 @@ export class SignInDto {
    * @example 'admin'
    */
   @MinLength(4)
-  account: string;
+  username: string;
 
   /**
    * 密码

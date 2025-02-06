@@ -22,19 +22,22 @@ export class PermissionsGuard implements CanActivate {
     const user: ActiveUserData = context.switchToHttp().getRequest()[
       REQUEST_USER_KEY
     ];
-    const userInfo = await this.prisma.user.findUnique({
+    const userInfo = await this.prisma.user.findUniqueOrThrow({
       where: { id: user.sub },
       include: {
-        role: { include: { menu: { include: { permission: true } } } },
+        roles: { include: { menus: { include: { permissions: true } } } },
       },
     });
 
-    if (!userInfo) return false;
     if (userInfo.isAdmin) return true;
-    const permissionsName = userInfo.role
-      .reduce((acc, role) => acc.concat(role.menu), [] as any[])
+    const menus = await this.prisma.menu.findMany({
+      where: { users: { some: { id: user.sub } } },
+      include: { permissions: true },
+    });
+
+    const permissionsName = menus
       .reduce((acc, menu) => acc.concat(menu.permissions), [] as Permission[])
-      .map((p: Permission) => p.value);
+      .map((p) => p.value);
 
     return contextPermissions.every((permission) =>
       permissionsName.includes(permission),

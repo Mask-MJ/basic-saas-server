@@ -9,6 +9,7 @@ import { extendedPrismaClient } from 'src/common/pagination/prisma.extension';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RouterModule } from '@nestjs/core';
 import { IamModule } from 'src/modules/iam/iam.module';
+import { SystemModule } from './modules/system/system.module';
 
 @Module({
   imports: [
@@ -20,11 +21,11 @@ import { IamModule } from 'src/modules/iam/iam.module';
     }),
     EventEmitterModule.forRoot(),
     RouterModule.register([
-      // { path: 'system', module: SystemModule },
+      { path: 'system', module: SystemModule },
       // { path: 'monitor', module: MonitorModule },
     ]),
     IamModule,
-    // SystemModule,
+    SystemModule,
     // MonitorModule,
   ],
   controllers: [],

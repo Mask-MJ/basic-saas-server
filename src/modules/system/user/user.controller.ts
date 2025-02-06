@@ -32,7 +32,6 @@ import {
 import { ActiveUser } from 'src/modules/iam/decorators/active-user.decorator';
 import { ActiveUserData } from 'src/modules/iam/interfaces/active-user-data.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { uploadDto } from 'src/common/dto/base.dto';
 import { ApiPaginatedResponse } from 'src/common/response/paginated.response';
 import { Permissions } from 'src/modules/iam/authorization/decorators/permissions.decorator';
 
@@ -65,13 +64,6 @@ export class UserController {
     return this.userService.findSelf(user.sub);
   }
 
-  @Get('charts')
-  @ApiOperation({ summary: '获取工作台信息' })
-  // @ApiOkResponse({ type: UserEntity })
-  async findCharts(@ActiveUser() user: ActiveUserData) {
-    return this.userService.findCharts(user);
-  }
-
   @Patch('changePassword')
   @ApiOperation({ summary: '修改密码' })
   @ApiOkResponse({ type: UserEntity })
@@ -95,9 +87,8 @@ export class UserController {
       }),
     )
     file: Express.Multer.File,
-    @Body() body: uploadDto,
   ) {
-    return this.userService.uploadAvatar(user, file, body);
+    return this.userService.uploadAvatar(user, file);
   }
 
   @Get(':id')
@@ -124,6 +115,6 @@ export class UserController {
     @Param('id') id: number,
     @Headers('X-Real-IP') ip: string | undefined,
   ) {
-    return this.userService.remove(user, id, ip ?? '');
+    return this.userService.remove(user, id, ip);
   }
 }

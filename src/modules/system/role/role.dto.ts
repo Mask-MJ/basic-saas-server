@@ -47,8 +47,10 @@ export class CreateRoleDto {
   @IsOptional()
   factoryIds: number[] = [];
 }
-export class QueryRoleDto extends PartialType(
-  IntersectionType(PickType(CreateRoleDto, ['name', 'value']), BaseDto),
+
+export class QueryRoleDto extends IntersectionType(
+  PartialType(PickType(CreateRoleDto, ['name', 'value'])),
+  BaseDto,
 ) {}
 
 export class UpdateRoleDto extends PartialType(CreateRoleDto) {

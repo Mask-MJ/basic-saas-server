@@ -22,12 +22,12 @@ export class RolesGuard implements CanActivate {
     const user = request[REQUEST_USER_KEY];
     const userInfo = await this.prismaService.user.findUnique({
       where: { id: user.sub },
-      include: { role: { include: { menu: true } } },
+      include: { roles: { include: { menus: true } } },
     });
 
     if (!userInfo) return false;
-    return userInfo.role.some((role) =>
-      role.menu.some((menu) =>
+    return userInfo.roles.some((role) =>
+      role.menus.some((menu) =>
         path.startsWith('/api/' + menu.path.split('/').pop()),
       ),
     );

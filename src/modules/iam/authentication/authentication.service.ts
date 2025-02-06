@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  InternalServerErrorException,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -44,33 +45,33 @@ export class AuthenticationService {
     );
   }
 
-  async signUp({ account, nickname, password }: SignUpDto): Promise<User> {
+  async signUp({ username, nickname, password }: SignUpDto): Promise<User> {
     try {
       // 判断数据库是否有数据
       // 如果不存在则创建第一个用户为管理员
 
       // 判断用户名是否存在
-      const user = await this.prisma.user.findUnique({ where: { account } });
+      const user = await this.prisma.user.findUnique({ where: { username } });
       if (user) {
         throw new ConflictException('用户名已存在');
       }
       return this.prisma.user.create({
         data: {
-          account: account,
+          username: username,
           password: await this.hashingService.hash(password),
           nickname: nickname,
         },
       });
     } catch (error) {
-      throw error;
+      throw new InternalServerErrorException(error);
     }
   }
 
   async signIn(signInDto: SignInDto, ip: string = '') {
     const user = await this.prisma.user.findUnique({
-      where: { account: signInDto.account },
+      where: { username: signInDto.username },
       include: {
-        role: { include: { menu: { include: { permission: true } } } },
+        roles: { include: { menus: { include: { permissions: true } } } },
       },
     });
     if (!user) {
@@ -87,7 +88,7 @@ export class AuthenticationService {
     this.logger.log('登录', AuthenticationService.name);
     this.eventEmitter.emit('login', {
       sessionId: '',
-      account: user.account,
+      username: user.username,
       ip,
       userId: user.id,
     });
@@ -104,7 +105,7 @@ export class AuthenticationService {
         user.id,
         this.jwtConfiguration.accessTokenTtl,
         {
-          account: user.account,
+          username: user.username,
           nickname: user.nickname || '',
         },
       ),

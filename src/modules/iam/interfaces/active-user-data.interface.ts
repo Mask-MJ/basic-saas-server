@@ -1,6 +1,6 @@
 export interface ActiveUserData {
   sub: number;
-  account: string;
+  username: string;
   nickname: string;
   roles: string[];
 }

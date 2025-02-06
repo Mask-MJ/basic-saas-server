@@ -5,11 +5,7 @@ import { CreateUserDto, UpdateUserDto, QueryUserDto } from './user.dto';
 import { ActiveUserData } from 'src/modules/iam/interfaces/active-user-data.interface';
 import { HashingService } from 'src/modules/iam/hashing/hashing.service';
 import { MinioService } from 'src/common/minio/minio.service';
-import { uploadDto } from 'src/common/dto/base.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
-import isoWeek from 'dayjs/plugin/isoWeek';
 
 @Injectable()
 export class UserService {
@@ -23,7 +19,7 @@ export class UserService {
 
   // Exclude keys from user
   // https://www.prisma.io/docs/orm/prisma-client/queries/excluding-fields
-  private exclude<User, Key extends keyof User>(
+  private exclude<User extends Record<string, any>, Key extends keyof User>(
     user: User,
     keys: Key[],
   ): Omit<User, Key> {
@@ -49,112 +45,23 @@ export class UserService {
     });
   }
 
-  findSelf(id: number) {
-    return this.prismaService.client.user.findUniqueOrThrow({
+  async findSelf(id: number) {
+    const user = await this.prismaService.client.user.findUniqueOrThrow({
       where: { id },
       include: {
         roles: { include: { menus: { include: { permissions: true } } } },
       },
     });
-  }
-
-  async findCharts(user: ActiveUserData) {
-    const factoryTotal = await this.prismaService.client.factory.count();
-    const valveTotal = await this.prismaService.client.valve.count();
-    const taskTotal = await this.prismaService.client.analysisTask.count();
-    // 获取用户本周的创建的任务数量， 从周一开始，到周日结束
-    // 根据当前时间获取本周周一到周日所有的日期
-    dayjs.extend(isoWeek);
-    const weekDays = Array.from({ length: 7 }).map((_, index) => {
-      return dayjs().startOf('isoWeek').add(index, 'day').toISOString();
-    });
-    console.log(weekDays);
-    const taskCount = await Promise.all(
-      weekDays.map(async (day) => {
-        const analysisTask =
-          await this.prismaService.client.analysisTask.findMany({
-            where: { createBy: user.account, createdAt: { gte: day } },
-          });
-        return {
-          name: dayjs(day).locale('zh-cn').format('dddd'),
-          value: analysisTask.length,
-        };
-      }),
-    );
-    // 查询最新的10条操作日志
-    const operationLog = (
-      await this.prismaService.client.operationLog.findMany({
-        where: { account: user.account, module: '分析任务' },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      })
-    ).map((log) => {
-      return {
-        ...log,
-        createdAt: dayjs(log.createdAt).format('YYYY-MM-DD HH:mm:ss'),
-      };
-    });
-
-    // 根据省份分组统计工厂数量
-    const factoryProvinceGroup = (
-      await this.prismaService.client.factory.groupBy({
-        by: ['province'],
-        _count: true,
-        where: { NOT: { province: '' } },
-      })
-    ).map((item) => ({ name: item.province, value: item._count }));
-
-    // 根据工厂行业分组统计工厂数量
-    const factoryIndustryGroup = (
-      await this.prismaService.client.factory.groupBy({
-        by: ['industry'],
-        _count: true,
-        where: { NOT: { industry: '' } },
-      })
-    ).map((item) => ({ name: item.industry, value: item._count }));
-
-    // 根据阀门品牌分组统计阀门数量
-    const valveBrandGroup = (
-      await this.prismaService.client.valve.groupBy({
-        by: ['valveBrand'],
-        _count: true,
-        where: { NOT: { valveBrand: '' } },
-      })
-    ).map((item) => ({ name: item.valveBrand, value: item._count }));
-    // 根据阀门型号分组统计阀门数量
-    const valveModelGroup = (
-      await this.prismaService.client.valve.groupBy({
-        by: ['valveSeries'],
-        _count: true,
-        where: { NOT: { valveSeries: '' } },
-      })
-    ).map((item) => ({ name: item.valveSeries, value: item._count }));
-
-    const positionerModelGroup = (
-      await this.prismaService.client.valve.groupBy({
-        by: ['positionerModel'],
-        _count: true,
-        where: { NOT: { positionerModel: '' } },
-      })
-    ).map((item) => ({ name: item.positionerModel, value: item._count }));
-
+    const userWithoutPassword = this.exclude(user, ['password']);
     return {
-      factoryTotal,
-      factoryProvinceGroup,
-      factoryIndustryGroup,
-      valveBrandGroup,
-      valveModelGroup,
-      positionerModelGroup,
-      valveTotal,
-      taskTotal,
-      taskCount,
-      operationLog,
+      ...userWithoutPassword,
+      roleIds: user.roles.map((role) => role.id),
     };
   }
 
   async findAll(queryUserDto: QueryUserDto) {
     const {
-      account,
+      username,
       nickname,
       email,
       phoneNumber,
@@ -163,17 +70,16 @@ export class UserService {
       beginTime,
       endTime,
     } = queryUserDto;
-
     const [rows, meta] = await this.prismaService.client.user
       .paginate({
         where: {
-          account: { contains: account },
+          username: { contains: username },
           nickname: { contains: nickname },
           email: { contains: email },
           phoneNumber: { contains: phoneNumber },
           createdAt: { gte: beginTime, lte: endTime },
         },
-        include: { role: true },
+        include: { roles: true },
       })
       .withPages({ limit: pageSize, page, includePageCount: true });
 
@@ -186,12 +92,12 @@ export class UserService {
   async findOne(id: number) {
     const user = await this.prismaService.client.user.findUniqueOrThrow({
       where: { id },
-      include: { role: true },
+      include: { roles: true },
     });
     const userWithoutPassword = this.exclude(user, ['password']);
     return {
       ...userWithoutPassword,
-      roleIds: user.role.map((role) => role.id),
+      roleIds: user.roles.map((role) => role.id),
     };
   }
 
@@ -234,9 +140,9 @@ export class UserService {
     });
   }
 
-  async remove(user: ActiveUserData, id: number, ip: string) {
+  async remove(user: ActiveUserData, id: number, ip?: string) {
     // 判断是否是管理员账号, 如果是管理员账号则不允许删除
-    const userInfo = await this.prismaService.client.user.findUnique({
+    const userInfo = await this.prismaService.client.user.findUniqueOrThrow({
       where: { id },
     });
     if (userInfo.isAdmin) {
@@ -244,21 +150,16 @@ export class UserService {
     }
     await this.prismaService.client.user.delete({ where: { id } });
     this.eventEmitter.emit('delete', {
-      title: `删除ID为${id}, 账号为${userInfo.account}的用户`,
+      title: `删除ID为${id}, 账号为${userInfo.username}的用户`,
       businessType: 2,
       module: '用户管理',
-      account: user.account,
+      username: user.username,
       ip,
     });
     return '删除成功';
   }
 
-  async uploadAvatar(
-    user: ActiveUserData,
-    file: Express.Multer.File,
-    body: uploadDto,
-  ) {
-    console.log(body.fileName);
+  async uploadAvatar(user: ActiveUserData, file: Express.Multer.File) {
     await this.minioClient.uploadFile('avatar', file.originalname, file.buffer);
     const url = await this.minioClient.getUrl('avatar', file.originalname);
     return this.prismaService.client.user.update({

@@ -3,7 +3,7 @@ import { IsNumber, IsPositive, IsString } from 'class-validator';
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 
-export class PaginateDto<TData> {
+export class PaginateDto {
   /**
    * 页码
    * @example 1
@@ -11,6 +11,7 @@ export class PaginateDto<TData> {
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
+  @ApiProperty({ required: false })
   page: number = 1;
 
   /**
@@ -20,11 +21,15 @@ export class PaginateDto<TData> {
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
+  @ApiProperty({ required: false })
   pageSize: number = 10;
+}
 
+export class Paginate<TData> extends PaginateDto {
+  @ApiProperty({ required: false })
   total: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   rows: TData[];
 }
 
@@ -33,20 +38,19 @@ export class TimeDto {
    * 开始时间
    * @example 1714752000000
    */
+  @ApiProperty({ required: false, type: 'number' })
   @Type(() => Number)
-  @Transform(({ value }: { value: number }) => dayjs(value).format(), {
-    toClassOnly: true,
-  })
+  @Transform(({ value }) => dayjs(value).format())
+  // 时间戳类型
   beginTime: Date;
 
   /**
    * 结束时间
    * @example 1716048000000
    */
+  @ApiProperty({ required: false, type: 'number' })
   @Type(() => Number)
-  @Transform(({ value }: { value: number }) => dayjs(value).format(), {
-    toClassOnly: true,
-  })
+  @Transform(({ value }) => dayjs(value).format())
   endTime: Date;
 }
 

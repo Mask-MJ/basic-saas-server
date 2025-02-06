@@ -1,5 +1,5 @@
 import { PartialType, IntersectionType, PickType } from '@nestjs/swagger';
-import { Exclude, Transform, Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsString,
   IsEnum,
@@ -67,9 +67,7 @@ export class CreateUserDto {
    */
   @IsOptional()
   @IsEnum([0, 1, 2])
-  @Transform(({ value }: { value: string }) => parseInt(value), {
-    toClassOnly: true,
-  })
+  @Transform(({ value }: { value: string }) => parseInt(value))
   sex?: number;
 
   /**
@@ -114,20 +112,11 @@ export class CreateUserDto {
   @IsArray()
   @IsNumber({}, { each: true })
   @IsOptional()
-  roleIds?: number[];
-
-  /**
-   * 菜单ID
-   * @example [1, 2]
-   */
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @IsOptional()
-  menuIds?: number[];
+  roleIds: number[] = [];
 }
 
-export class QueryUserDto extends PartialType(
-  IntersectionType(
+export class QueryUserDto extends IntersectionType(
+  PartialType(
     PickType(CreateUserDto, [
       'username',
       'nickname',
@@ -135,8 +124,8 @@ export class QueryUserDto extends PartialType(
       'phoneNumber',
       'sex',
     ]),
-    BaseDto,
   ),
+  BaseDto,
 ) {}
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {

@@ -1,0 +1,27 @@
+/// 操作日志记录表
+model OperationLog {
+  /// 操作日志ID
+  id           Int          @id @default(autoincrement())
+  /// 创建时间
+  createdAt    DateTime     @default(now())
+  /// 模块标题
+  title        String
+  /// 业务类型（0登录 1新增 2修改 3删除 4其他）
+  businessType BusinessType
+  /// 模块名称
+  module       String
+  /// 操作员账号
+  username     String
+  /// ip地址
+  ip           String
+  /// ip地址对应的地理位置
+  address      String
+}
+
+enum BusinessType {
+  LOGIN
+  ADD
+  UPDATE
+  DELETE
+  OTHER
+}

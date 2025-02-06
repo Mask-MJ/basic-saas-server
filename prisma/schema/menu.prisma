@@ -1,0 +1,49 @@
+/// 菜单信息表
+model Menu {
+  /// 角色ID
+  id          Int          @id @default(autoincrement())
+  /// 菜单名称
+  name        String       @unique
+  /// 显示顺序
+  sort        Int          @default(1)
+  /// 菜单路径
+  path        String       @unique
+  /// 菜单图标
+  icon        String       @default("")
+  /// 是否隐藏
+  hidden      Boolean      @default(false)
+  /// 状态（0停用 1正常）
+  status      Int          @default(1)
+  /// 创建者
+  createBy    String
+  /// 更新者
+  updateBy    String?
+  /// 创建时间
+  createdAt   DateTime     @default(now())
+  /// 更新时间
+  updatedAt   DateTime     @updatedAt
+  /// 备注
+  remark      String       @default("")
+  /// 父级菜单ID
+  parentId    Int?
+  parent      Menu?        @relation("MenuToMenu", fields: [parentId], references: [id])
+  children    Menu[]       @relation("MenuToMenu")
+  permissions Permission[]
+  roles       Role[]       @relation("MenuToRole")
+  users       User[]       @relation("MenuToUser")
+}
+
+/// 权限模型表
+model Permission {
+  id        Int      @id @default(autoincrement())
+  /// 权限名称
+  name      String
+  /// 权限值
+  value     String
+  remark    String   @default("")
+  /// 绑定菜单id
+  menuId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  menus     Menu?    @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}

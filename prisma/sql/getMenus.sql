@@ -1,8 +1,10 @@
-WITH RECURSIVE menu_tree AS (
-  SELECT id, name, parentId, ARRAY[id] AS path FROM menu WHERE parentId IS NULL
-  UNION ALL 
-  SELECT menu.id, menu.name, menu.parentId, menu_tree.path || menu.id 
-  FROM menu_tree 
-  JOIN menu ON menu.parentId = menu_tree.id
+WITH RECURSIVE menu_recursion AS (
+    SELECT id, name, "parentId", 1 AS level -- 初始化递归，level为1表示最顶层
+    FROM public."Menu"
+    WHERE "parentId" IS NULL -- 从顶级员工开始
+    UNION ALL
+    SELECT e.id, e.name, e.parentId, er.level + 1
+    FROM public."Menu" e
+    JOIN menu_recursion er ON e.parentId = er.id -- 连接自身以形成层级
 )
-SELECT * FROM menu_tree;
+SELECT * FROM menu_recursion;	

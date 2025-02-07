@@ -3,6 +3,7 @@ import { CreateMenuDto, QueryMenuDto, UpdateMenuDto } from './menu.dto';
 import { CustomPrismaService } from 'nestjs-prisma';
 import { ExtendedPrismaClient } from 'src/common/pagination/prisma.extension';
 import { ActiveUserData } from 'src/modules/iam/interfaces/active-user-data.interface';
+import { MenuEntity } from './menu.entity';
 
 @Injectable()
 export class MenuService {
@@ -67,7 +68,7 @@ export class MenuService {
     }
   }
 
-  async getMenus(menuId) {
+  async getMenus(menuId: number) {
     const node = await this.prismaService.client.menu.findUnique({
       where: { id: menuId },
       include: {
@@ -85,7 +86,7 @@ export class MenuService {
         child.children = childNodes;
       }
     }
-    return node.children;
+    return node;
   }
 
   findOne(id: number) {

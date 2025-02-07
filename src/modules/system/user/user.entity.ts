@@ -15,7 +15,7 @@ export class UserEntity implements User {
   avatar: string;
   email: string;
   phoneNumber: string;
-  role: RoleEntity[];
+  roles: RoleEntity[];
   sex: number;
   status: number;
   createBy: string;

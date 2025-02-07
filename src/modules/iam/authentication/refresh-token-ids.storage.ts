@@ -23,6 +23,7 @@ export class RefreshTokenIdsStorage
     const host = this.configService.get('REDIS_HOST');
     const port = this.configService.get('REDIS_PORT');
     const password = this.configService.get('REDIS_PASSWORD');
+    console.log(host);
     this.redisClient = new Redis({ host, port, password, lazyConnect: true });
   }
 

@@ -4,7 +4,7 @@ export class DictDataEntity implements DictData {
   name: string;
   value: string;
   sort: number;
-  status: boolean;
+  status: number;
   type: string;
   cnTitle: string | null;
   enTitle: string | null;
@@ -16,7 +16,7 @@ export class DictDataEntity implements DictData {
   treeId: number | null;
   createBy: string;
   updateBy: string | null;
-  remark: string | null;
+  remark: string;
   createdAt: Date;
   updatedAt: Date;
 }

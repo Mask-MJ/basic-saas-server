@@ -17,7 +17,7 @@ export class DictDataService {
 
   create(user: ActiveUserData, createDictDataDto: CreateDictDataDto) {
     return this.prismaService.client.dictData.create({
-      data: { ...createDictDataDto, createBy: user.account },
+      data: { ...createDictDataDto, createBy: user.username },
     });
   }
 
@@ -36,7 +36,6 @@ export class DictDataService {
           // dictType: { value: { contains: dictTypeValue } },
         },
         orderBy: { sort: 'asc' },
-        include: { tree: true },
       })
       .withPages({ page, limit: pageSize, includePageCount: true });
     return { rows, ...meta };
@@ -44,11 +43,11 @@ export class DictDataService {
 
   async findAllCharts(queryDictDataDto: QueryDictDataDto) {
     const { dictTypeValue } = queryDictDataDto;
-    const dictType = await this.prismaService.client.dictType.findFirst({
+    const dictType = await this.prismaService.client.dictType.findFirstOrThrow({
       where: { value: dictTypeValue },
     });
     return await this.prismaService.client.dictData.findMany({
-      where: { dictTypeId: dictType.id, isChart: true },
+      where: { dictTypeId: dictType.id },
       orderBy: { sort: 'asc' },
     });
   }
@@ -64,7 +63,7 @@ export class DictDataService {
   ) {
     return this.prismaService.client.dictData.update({
       where: { id },
-      data: { ...updateDictDataDto, updateBy: user.account },
+      data: { ...updateDictDataDto, updateBy: user.username },
     });
   }
 

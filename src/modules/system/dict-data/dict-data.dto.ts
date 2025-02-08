@@ -1,6 +1,6 @@
 import { IntersectionType, PartialType, PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 import { BaseDto } from 'src/common/dto/base.dto';
 
 export class CreateDictDataDto {
@@ -39,9 +39,9 @@ export class CreateDictDataDto {
    * @example true
    */
   @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
-  status?: boolean = true;
+  @IsNumber()
+  @Type(() => Number)
+  status?: number = 1;
 
   /**
    * 字典类型ID

@@ -3,7 +3,6 @@ import { CreateMenuDto, QueryMenuDto, UpdateMenuDto } from './menu.dto';
 import { CustomPrismaService } from 'nestjs-prisma';
 import { ExtendedPrismaClient } from 'src/common/pagination/prisma.extension';
 import { ActiveUserData } from 'src/modules/iam/interfaces/active-user-data.interface';
-import { MenuEntity } from './menu.entity';
 
 @Injectable()
 export class MenuService {
@@ -41,52 +40,27 @@ export class MenuService {
       where: { id: user.sub },
       include: { roles: true },
     });
-    if (userData.isAdmin) {
-      return this.prismaService.client.menu.findMany({
-        where: {
-          name: { contains: name },
-          parentId: !name ? null : undefined,
-        },
-        include: {
-          children: { orderBy: { sort: 'asc' }, include: { children: true } },
-        },
-        orderBy: { sort: 'asc' },
-      });
-    } else {
+    const where = {
+      name: { contains: name },
+      parentId: !name ? null : undefined,
+    };
+    if (!userData.isAdmin) {
       const roleIds = userData.roles.map((item) => item.id);
-      return this.prismaService.client.menu.findMany({
-        where: {
-          OR: [{ roles: { some: { id: { in: roleIds } } } }],
-          name: { contains: name },
-          parentId: !name ? null : undefined,
-        },
-        include: {
-          children: { orderBy: { sort: 'asc' }, include: { children: true } },
-        },
-        orderBy: { sort: 'asc' },
-      });
+      where['OR'] = [{ roles: { some: { id: { in: roleIds } } } }];
     }
-  }
 
-  async getMenus(menuId: number) {
-    const node = await this.prismaService.client.menu.findUnique({
-      where: { id: menuId },
+    return this.prismaService.client.menu.findMany({
+      where,
       include: {
         children: {
-          where: { parentId: menuId },
+          orderBy: { sort: 'asc' },
+          include: {
+            children: { orderBy: { sort: 'asc' }, include: { children: true } },
+          },
         },
       },
+      orderBy: { sort: 'asc' },
     });
-    if (!node) {
-      return {};
-    }
-    if (node.children.length > 0) {
-      for (const child of node.children) {
-        const childNodes = await this.getMenus(child.id);
-        child.children = childNodes;
-      }
-    }
-    return node;
   }
 
   findOne(id: number) {

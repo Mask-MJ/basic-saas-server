@@ -4,11 +4,11 @@ import { RoleController } from './role/role.controller';
 import { RoleService } from './role/role.service';
 import { MenuController } from './menu/menu.controller';
 import { MenuService } from './menu/menu.service';
+import { DictDataController } from './dict-data/dict-data.controller';
+import { DictDataService } from './dict-data/dict-data.service';
+import { DictTypeService } from './dict-type/dict-type.service';
+import { DictTypeController } from './dict-type/dict-type.controller';
 // import { DeptController } from './dept/dept.controller';
-// import { DictDataController } from './dict-data/dict-data.controller';
-// import { DictDataService } from './dict-data/dict-data.service';
-// import { DictTypeService } from './dict-type/dict-type.service';
-// import { DictTypeController } from './dict-type/dict-type.controller';
 
 // import { PostService } from './post/post.service';
 // import { PostController } from './post/post.controller';
@@ -25,8 +25,8 @@ export const systemControllers = [
   RoleController,
   MenuController,
   // DeptController,
-  // DictDataController,
-  // DictTypeController,
+  DictDataController,
+  DictTypeController,
   // PostController,
   // UnitController,
   // RuleController,
@@ -37,9 +37,9 @@ export const systemProviders = [
   UserService,
   RoleService,
   MenuService,
+  DictDataService,
+  DictTypeService,
   // DeptService,
-  // DictDataService,
-  // DictTypeService,
   // PostService,
   // UnitService,
   // RuleService,

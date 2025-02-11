@@ -6,6 +6,7 @@ import { ActiveUserData } from 'src/modules/iam/interfaces/active-user-data.inte
 import { HashingService } from 'src/modules/iam/hashing/hashing.service';
 import { MinioService } from 'src/common/minio/minio.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Permission } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -157,6 +158,22 @@ export class UserService {
       ip,
     });
     return '删除成功';
+  }
+
+  async findSelfCode(id: number) {
+    const userInfo = await this.prismaService.client.user.findUniqueOrThrow({
+      where: { id },
+    });
+    if (userInfo.isAdmin) return ['*'];
+    const menus = await this.prismaService.client.menu.findMany({
+      where: { users: { some: { id } } },
+      include: { permissions: true },
+    });
+    const permissionsName = menus
+      .reduce((acc, menu) => acc.concat(menu.permissions), [] as Permission[])
+      .map((p) => p.value);
+
+    return permissionsName;
   }
 
   async uploadAvatar(user: ActiveUserData, file: Express.Multer.File) {

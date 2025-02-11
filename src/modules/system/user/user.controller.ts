@@ -64,6 +64,13 @@ export class UserController {
     return this.userService.findSelf(user.sub);
   }
 
+  @Get('code')
+  @ApiOperation({ summary: '获取用户权限码' })
+  @ApiOkResponse({ type: String, isArray: true })
+  async findSelfCode(@ActiveUser() user: ActiveUserData) {
+    return this.userService.findSelfCode(user.sub);
+  }
+
   @Patch('changePassword')
   @ApiOperation({ summary: '修改密码' })
   @ApiOkResponse({ type: UserEntity })

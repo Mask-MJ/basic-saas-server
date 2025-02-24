@@ -11,9 +11,11 @@ import { RouterModule } from '@nestjs/core';
 import { IamModule } from 'src/modules/iam/iam.module';
 import { SystemModule } from './modules/system/system.module';
 
+const envFilePath = [`.env.${process.env.NODE_ENV || `development`}`, '.env'];
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ validate, isGlobal: true }),
+    ConfigModule.forRoot({ validate, isGlobal: true, envFilePath }),
     CustomPrismaModule.forRootAsync({
       isGlobal: true,
       name: 'PrismaService',
